@@ -309,6 +309,16 @@ describe('integration', function () {
             },
           ],
           [
+            'v16',
+            {
+              configuration: {
+                Runtime: 'nodejs16.x',
+                variables: { SLS_DEV_MODE_ORG_ID: process.env.SLS_ORG_ID, SLS_DEV_TOKEN: 'xxx' },
+              },
+              invokePayload: { test: 'foo' },
+            },
+          ],
+          [
             'sqs',
             {
               isAsyncInvocation: true,
