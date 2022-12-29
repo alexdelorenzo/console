@@ -10,6 +10,7 @@ from importlib_metadata import version, packages_distributions
 __all__: Final[List[str]] = [
     "serverlessSdk",
     "Options",
+    "FIRST",
 ]
 
 FIRST: Final[int] = 0
