@@ -44,3 +44,5 @@ class ServerlessSdk:
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
+  
+print('example')
