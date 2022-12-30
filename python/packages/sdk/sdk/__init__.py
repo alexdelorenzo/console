@@ -1,6 +1,7 @@
+from dataclasses import dataclass
+
 from typing_extensions import Final
 from typing import Dict, List, Optional
-from dataclasses import dataclass
 from os import environ
 
 from importlib_metadata import version, packages_distributions
@@ -20,7 +21,6 @@ _distribution: Final[List[str]] = _packages[_pkg_name]
 
 __name__: Final[str] = _distribution[FIRST]
 __version__: Final[str] = version(__name__)
-
 
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
