@@ -19,8 +19,8 @@ def test_can_import_serverless_sdk():
     try:
         from .. import serverlessSdk
 
-    except ImportError:
-        raise AssertionError("Cannot import `serverlessSdk`")
+    except ImportError as e:
+        raise AssertionError("Cannot import `serverlessSdk`") from e
 
 
 def test_has_name(sdk: ServerlessSdk):
