@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 from typing_extensions import Final
 from typing import Dict, List, Optional
-from dataclasses import dataclass
 from os import environ
 
 from importlib_metadata import version, packages_distributions  # available in Python >=3.8
@@ -11,7 +9,6 @@ from importlib_metadata import version, packages_distributions  # available in P
 # public exports
 __all__: Final[List[str]] = [
     "serverlessSdk",
-    "Options",
 ]
 
 FIRST: Final[int] = 0
@@ -26,11 +23,6 @@ __version__: Final[str] = version(__name__)
 SLS_ORG_ID: Final[str] = "SLS_ORG_ID"
 
 
-@dataclass
-class Options:
-    orgId: Optional[str] = None
-
-
 class ServerlessSdk:
     name: Final[str] = __name__
     version: Final[str] = __version__
@@ -40,8 +32,8 @@ class ServerlessSdk:
 
     orgId: Optional[str] = None
 
-    def _initialize(self, options: Options = Options()):
-        self.orgId = environ.get(SLS_ORG_ID, default=options.orgId)
+    def _initialize(self, org_id: Optional[str] = None):
+        self.orgId = environ.get(SLS_ORG_ID, default=org_id)
 
 
 serverlessSdk: Final[ServerlessSdk] = ServerlessSdk()
