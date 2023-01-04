@@ -13,8 +13,8 @@ __all__: Final[List[str]] = [
 
 FIRST: Final[int] = 0
 
-_packages: Final[Dict[str, List[str]]] = packages_distributions()
 _pkg_name: Final[str] = __name__ or __package__
+_packages: Final[Dict[str, List[str]]] = packages_distributions()
 _distribution: Final[List[str]] = _packages[_pkg_name]
 
 __name__: Final[str] = _distribution[FIRST]
