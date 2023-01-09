@@ -1,3 +1,4 @@
+#file: noinspection YAMLSchemaValidation
 name: "Python: Validate"
 
 on:
@@ -66,11 +67,39 @@ jobs:
           cd python/packages/sdk
 
           python3 -m pip install black
-          python3 -m black --check sdk
+          python3 -m black --check .
 
       - name: Check code with linter
         run: |
           cd python/packages/sdk
 
           python3 -m pip install ruff
-          python3 -m ruff sdk
+          python3 -m ruff .
+
+      - name: Install SDK Schema
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install poethepoet
+          python3 -m poethepoet install
+
+      - name: Run SDK Schema unit tests
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install poethepoet
+          python3 -m poethepoet test
+
+      - name: Validate SDK Schema code formatting
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install black
+          python3 -m black --check .
+
+      - name: Check SDK Schema code with linter
+        run: |
+          cd python/packages/sdk-schema
+
+          python3 -m pip install ruff
+          python3 -m ruff .
