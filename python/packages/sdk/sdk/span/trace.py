@@ -24,6 +24,8 @@ __all__: Final[List[str]] = [
     "TraceSpan",
 ]
 
+NO_SPAN: Final = None
+
 
 TraceSpanContext = ContextVar[Optional["TraceSpan"]]
 
@@ -50,10 +52,10 @@ class TraceSpanBuf(BaseModel):
 
 
 class TraceSpan:
-    parentSpan: Self
+    parent_span: Self
     name: str
-    startTime: Nanoseconds
-    endTime: Optional[Nanoseconds] = None
+    start_time: Nanoseconds
+    end_time: Optional[Nanoseconds] = None
     input: Optional[str] = None
     output: Optional[str] = None
     tags: Tags
@@ -75,15 +77,15 @@ class TraceSpan:
         self._set_spans()
 
     @staticmethod
-    def resolveCurrentSpan() -> Optional[TraceSpan]:
+    def resolve_current_span() -> Optional[TraceSpan]:
         global root_span
         span = TraceSpan._get_span()
 
-        return span or root_span or None
+        return span or root_span or NO_SPAN
 
     @staticmethod
     def _get_span() -> Optional[TraceSpan]:
-        return ctx.get(None)
+        return ctx.get(NO_SPAN)
 
     def _set_spans(self):
         self._set_root_span()
@@ -93,19 +95,19 @@ class TraceSpan:
     def _set_root_span(self):
         global root_span
 
-        if root_span is None:
+        if root_span is NO_SPAN:
             root_span = self
-            self.parentSpan = None
+            self.parent_span = NO_SPAN
 
-        elif root_span.endTime is not None:
+        elif root_span.end_time is not NO_SPAN:
             raise UnreachableTrace("Cannot initialize span: Trace is closed")
 
     def _set_parent_span(self):
         global root_span
-        self.parentSpan = TraceSpan.resolveCurrentSpan()
+        self.parent_span = TraceSpan.resolve_current_span()
 
-        while self.parentSpan.endTime:
-            self.parentSpan = self.parentSpan.parentSpan or root_span
+        while self.parent_span.end_time:
+            self.parent_span = self.parent_span.parent_span or root_span
 
     def _set_ctx(self):
         ctx.set(self)
@@ -120,27 +122,27 @@ class TraceSpan:
         default_start = time_ns()
 
         if start_time is not None and not isinstance(start_time, Nanoseconds):
-            raise InvalidType("`startTime` must be an integer.")
+            raise InvalidType("`start_time` must be an integer.")
 
         if start_time is not None and start_time > default_start:
             raise FutureSpanStartTime(
                 "Cannot initialize span: Start time cannot be set in the future"
             )
 
-        self.startTime = start_time or default_start
+        self.start_time = start_time or default_start
 
     @cached_property
     def id(self) -> TraceId:
         return generate_id()
 
     @cached_property
-    def traceId(self) -> TraceId:
-        parent = self.parentSpan
+    def trace_id(self) -> TraceId:
+        parent = self.parent_span
 
         if parent is self:
             return generate_id()
 
-        return parent.traceId if parent else generate_id()
+        return parent.trace_id if parent else generate_id()
 
     @property
     def output(self) -> str:
@@ -157,22 +159,22 @@ class TraceSpan:
         global root_span
         default: Nanoseconds = time_ns()
 
-        if self.endTime is not None:
+        if self.end_time is not None:
             raise ClosureOnClosedSpan("TraceSpan already closed.")
 
-        self.endTime = default if end_time is None else end_time
+        self.end_time = default if end_time is None else end_time
 
         # if self is root_span:
         #     ctx.set(None)
 
-    def toProtobufObject(self) -> TraceSpanBuf:
+    def to_protobuf_object(self) -> TraceSpanBuf:
         return TraceSpanBuf(
             id=self.id,
-            trace_id=self.traceId,
-            parent_span_id=self.parentSpan.id if self.parentSpan else None,
+            trace_id=self.trace_id,
+            parent_span_id=self.parent_span.id if self.parent_span else None,
             name=self.name,
-            start_time_unix_nano=self.startTime,
-            end_time_unix_nano=self.endTime,
+            start_time_unix_nano=self.start_time,
+            end_time_unix_nano=self.end_time,
             tags=self.tags,
             input=self.input,
             output=self.output,
