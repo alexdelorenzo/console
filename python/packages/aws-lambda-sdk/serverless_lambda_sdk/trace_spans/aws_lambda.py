@@ -54,8 +54,6 @@ if ARCH:
 
 TAGS[Tag.name] = environ.get(Env.AWS_LAMBDA_FUNCTION_NAME)
 TAGS[Tag.version] = environ.get(Env.AWS_LAMBDA_FUNCTION_VERSION)
-TAGS[Tag.request_id] = SET_ON_REQUEST
-TAGS[Tag.outcome] = SET_ON_REQUEST
 
 
 def get_tags() -> Tags:
