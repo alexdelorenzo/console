@@ -6,6 +6,13 @@ from . import compare_handlers
 from ..base import Handler, Instrument
 
 
+class Context:
+    aws_request_id: str = "1234"
+
+
+ctx = Context()
+
+
 @pytest.fixture
 def instrument() -> Instrument:
     from ..instrument import instrument
@@ -26,7 +33,7 @@ def test_instrument_is_callable(instrument: Instrument):
 
 
 def test_instrument_wraps_callable(instrument: Instrument):
-    def example():
+    def example(event, context):
         pass
 
     result = instrument(example)
