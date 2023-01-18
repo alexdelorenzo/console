@@ -2,15 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from . import compare_handlers
+from . import compare_handlers, ensure_globals, reset_globals
 from ..base import Handler, Instrument
-
-
-class Context:
-    aws_request_id: str = "1234"
-
-
-ctx = Context()
 
 
 @pytest.fixture
@@ -32,6 +25,7 @@ def test_instrument_is_callable(instrument: Instrument):
     assert callable(instrument)
 
 
+@ensure_globals
 def test_instrument_wraps_callable(instrument: Instrument):
     def example(event, context):
         pass
@@ -40,19 +34,21 @@ def test_instrument_wraps_callable(instrument: Instrument):
     assert callable(result)
 
 
+@ensure_globals
 def test_instrumented_callable_behaves_like_original(instrument: Instrument):
-    def example(a: int, b: int) -> int:
-        return a + b
+    def example(event, context) -> str:
+        return "Hello World"
 
     instrumented = instrument(example)
 
     compare_handlers(example, instrumented)
 
 
+@ensure_globals
 def test_instrument_works_with_all_callables(instrument: Instrument):
     class Example:
-        def __call__(self, a: int, b: int) -> int:
-            return a + b
+        def __call__(self, event, context) -> str:
+            return "Hello World"
 
     example: Handler = Example()
     instrumented: Handler = instrument(example)

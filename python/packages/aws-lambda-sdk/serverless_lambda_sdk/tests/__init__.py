@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from functools import wraps
 from typing import Callable, Dict
 
 from ..base import Handler
@@ -9,12 +10,46 @@ from ..base import Handler
 Params = Dict[str, inspect.Parameter]
 
 
+class Context:
+    aws_request_id: int = 1234
+
+
+ctx = Context()
+
+
+def reset_globals():
+    from ..trace_spans.aws_lambda import (
+        aws_lambda_span,
+        aws_lambda_initialization,
+        aws_lambda_invocation,
+        get_tags,
+    )
+
+    for span in aws_lambda_span, aws_lambda_initialization, aws_lambda_invocation:
+        tags = get_tags()
+        span.end_time = None
+        span.tags = tags
+
+
+def ensure_globals(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        reset_globals()
+        val = func(*args, **kwargs)
+        reset_globals()
+
+        return val
+
+    return wrapper
+
+
 def get_params(func: Callable) -> Params:
     signature = inspect.signature(func)
 
     return signature.parameters
 
 
+@ensure_globals
 def compare_handlers(original: Handler, instrumented: Handler):
     assert callable(original) and callable(instrumented)
 
@@ -22,6 +57,6 @@ def compare_handlers(original: Handler, instrumented: Handler):
     instrumented_params = get_params(instrumented)
     assert orig_params == instrumented_params
 
-    orig_result = original(1, 2)
-    instrumented_result = instrumented(1, 2)
+    orig_result = original(None, ctx)
+    instrumented_result = instrumented(None, ctx)
     assert orig_result == instrumented_result
