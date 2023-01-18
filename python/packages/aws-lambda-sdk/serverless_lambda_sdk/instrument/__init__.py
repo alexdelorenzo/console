@@ -1,20 +1,29 @@
 from __future__ import annotations
 
 import logging
+import base64
 import traceback
 from functools import wraps
 from time import time_ns
-from typing import Any, List
+from typing import Any, Dict, List
 
+from serverless_sdk_schema import TracePayload
 from typing_extensions import Final
 
 from ..base import Handler, Outcome, Tag
-from ..trace_spans.aws_lambda import aws_lambda_span
+from ..trace_spans.aws_lambda import (
+    aws_lambda_span,
+    aws_lambda_initialization,
+    aws_lambda_invocation,
+)
 
 
 __all__: Final[List[str]] = [
     "instrument",
 ]
+
+
+TELEMETRY_PREFIX: Final[str] = "SERVERLESS_TELEMETRY.T"
 
 
 def get_stacktrace(exception: Exception) -> str:
@@ -25,9 +34,12 @@ def get_stacktrace(exception: Exception) -> str:
 
 
 def instrument(user_handler: Handler, *args, **kwargs) -> Handler:
+    aws_lambda_initialization.close()
+
     @wraps(user_handler)
-    def wrapper(event, context):
-        aws_lambda_span.tags[Tag.request_id] = context.aws_request_id
+    def wrapper(event, context: Any = None):
+        if context:
+            aws_lambda_span.tags[Tag.request_id] = context.aws_request_id
 
         try:
             result = user_handler(event, context)
@@ -50,3 +62,35 @@ def close_trace(outcome: str, outcome_result: Any):
 
     end_time = time_ns()
     aws_lambda_span.close(end_time=end_time)
+    report_trace()
+
+
+def report_trace():
+    payload = get_payload()
+    as_base64 = to_base64_encoded_protobuf(payload)
+    logging.debug(f"{TELEMETRY_PREFIX}.{as_base64}")
+
+
+def get_payload() -> Dict[str, Any]:
+    payload = {
+        "slsTags": {
+            "orgId": aws_lambda_span.tags[Tag.org_id],
+            "service": aws_lambda_span.tags[Tag.service],
+            "sdk": {
+                "name": aws_lambda_span.tags[Tag.sdk_name],
+                "version": aws_lambda_span.tags[Tag.sdk_version],
+            },
+        },
+        "spans": [],
+        "events": [],
+    }
+    return payload
+
+
+def to_base64_encoded_protobuf(payload: Dict[str, Any]) -> str:
+    trace_payload = TracePayload()
+    trace_payload.from_dict(payload)
+    encoded: bytes = trace_payload.SerializeToString()
+    as_base64: str = base64.b64encode(encoded).decode("utf-8")
+
+    return as_base64
