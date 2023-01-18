@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import inspect
 from functools import wraps
+from os import environ
 from typing import Callable, Dict
 
 from ..base import Handler
+
+
+environ['AWS_LAMBDA_FUNCTION_NAME'] = 'example.handler'
+environ['SLS_ORG_ID'] = 'hello.world'
+environ['AWS_LAMBDA_INITIALIZATION_TYPE'] = 'on-demand'
+environ['AWS_LAMBDA_FUNCTION_VERSION'] ='1'
 
 
 Params = Dict[str, inspect.Parameter]

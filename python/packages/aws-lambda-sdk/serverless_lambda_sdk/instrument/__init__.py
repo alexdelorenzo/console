@@ -7,6 +7,7 @@ from functools import wraps
 from time import time_ns
 from typing import Any, Dict, List
 
+from serverless_sdk.span.trace import TraceSpan
 from serverless_sdk_schema import TracePayload
 from typing_extensions import Final
 
@@ -71,7 +72,14 @@ def report_trace():
     logging.debug(f"{TELEMETRY_PREFIX}.{as_base64}")
 
 
+def convert_tracespan_protobuf_to_dict(span: TraceSpan) -> Dict[str, Any]:
+    obj = span.to_protobuf_object()
+    return obj.dict(by_alias=True)
+
+
 def get_payload() -> Dict[str, Any]:
+    span_buf = convert_tracespan_protobuf_to_dict(aws_lambda_span)
+
     payload = {
         "slsTags": {
             "orgId": aws_lambda_span.tags[Tag.org_id],
@@ -81,7 +89,7 @@ def get_payload() -> Dict[str, Any]:
                 "version": aws_lambda_span.tags[Tag.sdk_version],
             },
         },
-        "spans": [],
+        "spans": [span_buf],
         "events": [],
     }
     return payload
