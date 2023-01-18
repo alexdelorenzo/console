@@ -14,6 +14,7 @@ requires-python = ">=3.7"
 dependencies = [
     "strenum>=0.4.9",
     "typing-extensions>=4.4", # included in Python 3.8 - 3.11
+    "importlib_metadata>=5.2", # included in Python >=3.8
 ]
 [project.optional-dependencies]
 tests = [

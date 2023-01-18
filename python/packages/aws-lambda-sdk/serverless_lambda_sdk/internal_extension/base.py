@@ -30,13 +30,12 @@ LAMBDA_TASK_ROOT: Final[Optional[str]] = environ.get(Env.LAMBDA_TASK_ROOT)
 SLS_ORG_ID: Final[Optional[str]] = environ.get(Env.SLS_ORG_ID)
 SLS_SDK_DEBUG: Final[Optional[str]] = environ.get(Env.SLS_SDK_DEBUG)
 
+START: Final[int] = time_ns()
 
 cache = lru_cache(maxsize=1)
 
 
 def initialize(handler: Optional[str] = HANDLER):
-    start = time_ns()
-
     if SLS_SDK_DEBUG:
         logging.basicConfig(level=logging.DEBUG, format="⚡ SDK: %(message)s")
 
@@ -58,7 +57,7 @@ def initialize(handler: Optional[str] = HANDLER):
     set_handler_vars()
 
     end = time_ns()
-    ms = round((end - start) / NS_IN_MS)
+    ms = round((end - START) / NS_IN_MS)
 
     logging.debug(f"Overhead duration: Internal initialization: {ms}ms")
 
