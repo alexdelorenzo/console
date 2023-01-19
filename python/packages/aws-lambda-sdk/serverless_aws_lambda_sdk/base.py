@@ -21,7 +21,9 @@ __version__: Final[str] = version(__name__)
 NAME: Final[str] = __name__
 
 
-NEW_HANDLER: Final[str] = "/opt/sls-sdk-python/wrapper.handler"
+NEW_HANDLER: Final[
+    str
+] = "/opt/serverless_aws_lambda_sdk/internal_extension/wrapper.handler"
 PYTHON_EXTS: Final[Tuple[str, ...]] = (".py", ".pyc", ".pyo", ".pyd")
 
 
